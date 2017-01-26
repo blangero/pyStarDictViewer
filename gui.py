@@ -17,7 +17,7 @@ def show_dicts():
         textwin.insert(tk.END, '\n  '+d.ifo['wordcount']+' words, '
                                      +d.ifo['date']+'\n', '<small>')
         i += 1
-    else:
+    if i == 1:
         textwin.insert(tk.END, 'No dictionaries found in ./dic subdirectory.')
     textwin['wrap'] = tk.WORD
     textwin['state'] = tk.DISABLED
@@ -207,7 +207,7 @@ textwin.tag_config("<small>" , foreground="black"  , font=font_small)
 
 textwin.tag_config("<a>", foreground="blue", underline=1)
 textwin.tag_bind("<a>", "<Button-1>", on_dict_select)
-textwin.tag_bind("<a>", "<Enter>", lambda e:e.widget.config(cursor="hand1"))
+textwin.tag_bind("<a>", "<Enter>", lambda e:e.widget.config(cursor="hand2"))
 textwin.tag_bind("<a>", "<Leave>", lambda e:e.widget.config(cursor="arrow"))
 
 # grid configuration
