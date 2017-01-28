@@ -2,10 +2,10 @@ try:
     import Tkinter as tk
     import tkFont
 except:
-    from tkinter import font as tkFont
     import tkinter as tk
+    from tkinter import font as tkFont
 
-from wordindex import WordIndexWindow, print_dir
+from wordindex import WordIndexWindow
 
 def show_dicts():
     textwin['state'] = tk.NORMAL
