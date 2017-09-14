@@ -1,14 +1,78 @@
 import struct
 import os
+import gzip
 import zlib
 
+class DictZip:
+    def __init__(self, name):
+        self.name = name
+        self.deflate = zlib.decompressobj(-15)
+        self.fd = open(name, 'rb')
+        t = self._read_header(self.fd)
+        self.chlen   = t[0]
+        self.sizes   = t[1]
+        self.offsets = t[2]
+        self.chcnt = len(self.sizes)
+
+    def _read_header(self, f):
+        f.seek(0)
+        # check header parameters
+        header = f.read(10)
+        if header[:2] != '\x1f\x8b':
+            raise ValueError('gzip signature expected')
+        if ord(header[2]) != 8:
+            raise ValueError('only DEFLATE archives supported')
+        flags = ord(header[3])
+        if not flags&(1<<2):
+            raise ValueError('extra dictzip field expected')
+        # read dictzip data
+        XLEN, SI1, SI2, LEN = struct.unpack('<H2cH', f.read(6))
+        if SI1+SI2 != 'RA':
+            raise ValueError("'RA' signature expected")
+        data = f.read(LEN)
+        VER, CHLEN, CHCNT = struct.unpack('<3H', data[:6])
+        sizes = struct.unpack('<'+str(CHCNT)+'H', data[6:])
+        # skip filename if present
+        if flags&(1<<3):
+            while self.fd.read(1) != '\x00':
+                pass
+        # transform sizes into start offsets of chunks
+        ofs = [self.fd.tell()]
+        for s in sizes[:-1]:
+            ofs.append(ofs[-1]+s)
+        return CHLEN, sizes, ofs
+
+    def seek(self, offset):
+        'only to provide file-like interface'
+        self.offset = offset
+
+    def read(self, size):
+        '''
+        determines which chunk to read and decompress
+        it's possible that data overrun to the following chunk
+        so this must be handled too
+        '''
+        chunk = self.offset//self.chlen
+        self.fd.seek(self.offsets[chunk])
+        compr = self.fd.read(self.sizes[chunk])
+        data = self.deflate.decompress(compr)
+        # offset in the chunk
+        chofs = self.offset % self.chlen
+        if chofs+size > self.chlen:
+            # data continue in the next chunk
+            out = data[chofs:]
+            self.seek(self.offset+len(out))
+            out += self.read(size-len(out))
+        else:
+            # all in the current chunk
+            out = data[chofs:chofs+size]
+        return out
+
+    def close(self):
+        self.fd.close()
+
+
 class StarDict:
-    '''
-    class for searching in a stardict dictionary
-    if 'load' is False, then only .ifo parameters are loaded
-    and both .idx and .dict must be loaded explicitly by calling
-    load() method
-    '''
     def __init__(self, ifopath, load=True):
         self.fname = ifopath[:-4]
         self._check_files()
@@ -56,7 +120,7 @@ class StarDict:
                              ))
             a = b+9
             b = data.find(b'\0', a)
-        # assert int(self.ifo['wordcount']) == len(self.idx)
+        assert int(self.ifo['wordcount']) == len(self.idx)
         # compression of .dict is optional
         try:
             self.dictf = open(self.fname+'.dict', 'rb')
@@ -134,78 +198,6 @@ class StarDict:
 
     def __str__(self):
         return str(self.ifo)
-
-class DictZip:
-    '''
-    provides  access to compressed dictzip files (dict.dz)
-    with file-like interface
-    '''
-    def __init__(self, name):
-        self.name = name
-        self.deflate = zlib.decompressobj(-15)
-        self.fd = open(name, 'rb')
-        t = self._read_header(self.fd)
-        self.chlen   = t[0]
-        self.sizes   = t[1]
-        self.offsets = t[2]
-        self.chcnt = len(self.sizes)
-
-    def _read_header(self, f):
-        f.seek(0)
-        # check header parameters
-        header = f.read(10)
-        if header[:2] != '\x1f\x8b':
-            raise ValueError('gzip signature expected')
-        if ord(header[2]) != 8:
-            raise ValueError('only DEFLATE archives supported')
-        flags = ord(header[3])
-        if not flags&(1<<2):
-            raise ValueError('extra dictzip field expected')
-        # read dictzip data
-        XLEN, SI1, SI2, LEN = struct.unpack('<H2cH', f.read(6))
-        if SI1+SI2 != 'RA':
-            raise ValueError("'RA' signature expected")
-        data = f.read(LEN)
-        VER, CHLEN, CHCNT = struct.unpack('<3H', data[:6])
-        sizes = struct.unpack('<'+str(CHCNT)+'H', data[6:])
-        # skip filename if present
-        if flags&(1<<3):
-            while f.read(1) != '\x00':
-                pass
-        # transform sizes into start offsets of chunks
-        ofs = [f.tell()]
-        for s in sizes[:-1]:
-            ofs.append(ofs[-1]+s)
-        return CHLEN, sizes, ofs
-
-    def seek(self, offset):
-        'only to provide file-like interface'
-        self.offset = offset
-
-    def read(self, size):
-        '''
-        determines which chunk to read and decompress
-        it's possible that data overrun to the following chunk
-        so this must be handled too
-        '''
-        chunk = self.offset//self.chlen
-        self.fd.seek(self.offsets[chunk])
-        compr = self.fd.read(self.sizes[chunk])
-        data = self.deflate.decompress(compr)
-        # offset in the chunk
-        chofs = self.offset % self.chlen
-        if chofs+size > self.chlen:
-            # data continue in the next chunk
-            out = data[chofs:]
-            self.seek(self.offset+len(out))
-            out += self.read(size-len(out))
-        else:
-            # all in the current chunk
-            out = data[chofs:chofs+size]
-        return out
-
-    def close(self):
-        self.fd.close()
 
 
 def look_for_dicts(path):

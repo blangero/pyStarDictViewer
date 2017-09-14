@@ -2,12 +2,13 @@ try:
     import Tkinter as tk
     import tkFont
 except:
-    import tkinter as tk
     from tkinter import font as tkFont
+    import tkinter as tk
 
-from wordindex import WordIndexWindow
+from wordindex import WordIndexWindow, print_dir
 
 def show_dicts():
+    global dicts
     textwin['state'] = tk.NORMAL
     textwin['wrap'] = tk.NONE
     textwin.delete('1.0', tk.END)
@@ -17,8 +18,6 @@ def show_dicts():
         textwin.insert(tk.END, '\n  '+d.ifo['wordcount']+' words, '
                                      +d.ifo['date']+'\n', '<small>')
         i += 1
-    if i == 1:
-        textwin.insert(tk.END, 'No dictionaries found in ./dic subdirectory.')
     textwin['wrap'] = tk.WORD
     textwin['state'] = tk.DISABLED
 
@@ -38,7 +37,6 @@ def change_dict(num):
     windex.rebind(dict_active) 
     wentry.delete(0, tk.END)
    
-
 def show_translation(index):
     text = dict_active.dict_data(index)
     #print text
@@ -141,7 +139,6 @@ def on_updown(event):
 
 
 root = tk.Tk()
-root.wm_title('pyStarDictViewer')
 root.resizable(height=False, width=False)
 root.bind('<Tab>', on_tab)
 
@@ -171,6 +168,7 @@ windex.lbox['font'] = text_font
 textwin = tk.Text(root, width=45, height=1, padx=4, pady=2)
 textwin['font'] = text_font
 textwin['wrap'] = tk.WORD
+textwin['state'] = tk.DISABLED
 
 # status bar & tool bar
 bottom_frame = tk.Frame(root)
@@ -199,15 +197,15 @@ font_italic = tkFont.Font(family="Arial", size=13, slant=tkFont.ITALIC)
 font_small  = tkFont.Font(family="Arial", size=9)
 
 # formatting tags
-textwin.tag_config("head"    , foreground="black"  , font=font_head)
+textwin.tag_config("head"    , foreground="black" , font=font_head)
 textwin.tag_config("normal"  , foreground="black"  , font=font_normal)
 textwin.tag_config("<b>"     , foreground="black"  , font=font_bold)
 textwin.tag_config("<i>"     , foreground="black"  , font=font_italic)
 textwin.tag_config("<small>" , foreground="black"  , font=font_small)
 
 textwin.tag_config("<a>", foreground="blue", underline=1)
-textwin.tag_bind("<a>", "<Button-1>", on_dict_select)
-textwin.tag_bind("<a>", "<Enter>", lambda e:e.widget.config(cursor="hand2"))
+textwin.tag_bind("<a>", "<ButtonRelease-1>", on_dict_select)
+textwin.tag_bind("<a>", "<Enter>", lambda e:e.widget.config(cursor="hand1"))
 textwin.tag_bind("<a>", "<Leave>", lambda e:e.widget.config(cursor="arrow"))
 
 # grid configuration
@@ -221,24 +219,26 @@ if __name__ == '__main__':
 
     import stardict as sdict
 
+    print 'dicts lookup'
     ifos = sdict.look_for_dicts('./dic')
     dicts = []
     for ifo in ifos:
         try:
             dicts.append(sdict.StarDict(ifo, False));
-        except ValueError as e:
-            print e, ifo
+        except ValueError:
+            print 'Could NOT load', ifo
      
-    if dicts:
-        dicts = sorted(dicts, key=lambda d:d.ifo['bookname']+d.ifo['wordcount'])
-        dict_active = dicts[0]
-        dict_active.load()
-        windex.rebind(dict_active) 
-        root.wm_title(dict_active.ifo['bookname'])
-        wentry.focus_set()
-    else:
-        wentry['state'] = 'disabled'
-    
+    dicts = sorted(dicts, key=lambda d:d.ifo['bookname']+d.ifo['wordcount'])
+    print 'loading'
+
+    dict_active = dicts[0]
+    dict_active.load()
+    windex.rebind(dict_active) 
+    print 'done'
+
     show_dicts()
+
+    root.wm_title(dict_active.ifo['bookname'])
+    wentry.focus_set()
     root.mainloop()
     

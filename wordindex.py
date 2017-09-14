@@ -1,7 +1,7 @@
 try:
     import Tkinter as tk
 except:
-    import tkinter as tk
+    from tkinter import font as tkFont
 
 import math
 
