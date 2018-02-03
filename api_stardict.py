@@ -91,7 +91,7 @@ class StarDict:
             self.ifo[pair[0]] = pair[1][:-1]
 
         if (self.ifo['version'] not in ('2.4.2', '3.0.0') or
-                (self.ifo['sametypesequence'] != 'g' and self.ifo['sametypesequence'] != 'x') ):
+            self.ifo['sametypesequence'] != 'g'):
             raise ValueError('unsupported StarDict')
 
         if (not os.path.exists(name+'.idx')):
@@ -213,19 +213,32 @@ def look_for_dicts(path):
             name = f[:-4]
             if (name+'.idx' in files and (name+'.dict.dz' in files
                                           or name+'.dict' in files)):
-                #names.append(root+'/'+name+'.ifo')
-                names.append(root+'\\'+name+'.ifo')
+                names.append(root+'/'+name+'.ifo')
     return names
         
 
 if __name__ == '__main__':
 
-    dicts = look_for_dicts('./dic')
+    dicts = look_for_dicts('C:\\Users\\blang\\OneDrive\\PythonProjects\\WatchDicHistory\\pyStarDictViewer\\dic')
     for d in dicts:
         print(d)
-
+    dict = StarDict(dicts[0], False)
+    i = dict.search('a',True)
+    print("this is 'a' in dictionary:" +  str(i) )
     dz = DictZip(dicts[0][:-4]+'.dict.dz')
     dz.seek(dz.chlen-10)
     print(dz.read(20))
 
 
+'''
+For Python 3.5+ use:
+
+import importlib.util
+spec = importlib.util.spec_from_file_location("stardict", "C:\\Users\\blang\\OneDrive\\PythonProjects\\WatchDicHistory\\pyStarDictViewer\\api_stardict.py")
+foo = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(foo)
+dicts = foo.look_for_dicts("C:\\Users\\blang\\OneDrive\\PythonProjects\\WatchDicHistory\\pyStarDictViewer\\dic")
+
+
+foo.MyClass()
+'''

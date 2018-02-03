@@ -24,7 +24,7 @@ def show_dicts():
 def on_dict_select(event):
     line = textwin.index('@%d,%d'%(event.x, event.y))
     line = int(float(line)) + 1
-    change_dict(line//2-1)
+    change_dict(line/2-1)
 
 def change_dict(num):
     global dict_active
@@ -43,7 +43,7 @@ def show_translation(index):
     textwin['state'] = tk.NORMAL
     textwin.delete('1.0', tk.END)
     textwin.insert('1.0', ' '+windex.items[index], 'head')
-    insert_formatted('\n'+text)
+    insert_formatted('\n'+text.decode())
     textwin['state'] = tk.DISABLED
 
 
@@ -86,7 +86,7 @@ def command_eval(word):
             num = int(word[2:])
             change_dict(num-1)
         except (ValueError, IndexError) as e:
-            print e
+            print(e)
             wentry.red = True        
     # elif
     # other commands...
@@ -219,22 +219,23 @@ if __name__ == '__main__':
 
     import stardict as sdict
 
-    print 'dicts lookup'
+    print('dicts lookup')
     ifos = sdict.look_for_dicts('./dic')
+#    ifos = sdict.look_for_dicts('C:\\Users\\blang\\OneDrive\\PythonProjects\\WatchDicHistory\\pyStarDictViewer\\dic')
     dicts = []
     for ifo in ifos:
         try:
             dicts.append(sdict.StarDict(ifo, False));
         except ValueError:
-            print 'Could NOT load', ifo
+            print('Could NOT load', ifo)
      
     dicts = sorted(dicts, key=lambda d:d.ifo['bookname']+d.ifo['wordcount'])
-    print 'loading'
+    print('loading')
 
     dict_active = dicts[0]
     dict_active.load()
     windex.rebind(dict_active) 
-    print 'done'
+    print('done')
 
     show_dicts()
 

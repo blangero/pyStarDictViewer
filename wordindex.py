@@ -1,5 +1,5 @@
 try:
-    import Tkinter as tk
+    import tkinter as tk
 except:
     from tkinter import font as tkFont
 
@@ -7,8 +7,8 @@ import math
 
 def print_dir(o):
     for attr in [a for a in dir(o) if a[0:2] != ('__')]:
-        print attr, '=', getattr(o, attr),
-    print '\n\n'
+        print(attr, '=', getattr(o, attr)),
+    print('\n\n')
 
 class WordIndexWindow(tk.Frame):
 
@@ -175,7 +175,7 @@ class WordIndexWindow(tk.Frame):
         return 'break'
 
     def _on_ctrl_endhome(self, event):
-        print event.keysym
+        print(event.keysym)
         return 'break'
 
     def focus(self):
