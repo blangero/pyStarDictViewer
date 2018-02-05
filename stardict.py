@@ -156,6 +156,7 @@ class StarDict:
         when prefix=True it searches for the lowest record
         with 'word' as its prefix
         '''
+        print("in search(), search word:",word)
         if word == '':
             return -1
         a, b = 0, len(self.idx)-1

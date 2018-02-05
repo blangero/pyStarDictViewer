@@ -38,7 +38,9 @@ def change_dict(num):
     wentry.delete(0, tk.END)
    
 def show_translation(index):
+    print("show_translation index:", index)
     text = dict_active.dict_data(index)
+    print("show_translation text:", text)
     #print text
     textwin['state'] = tk.NORMAL
     textwin.delete('1.0', tk.END)
@@ -71,6 +73,7 @@ def on_entry_change(*args):
         # ':' opens command sequence, ignore it
         return
     i = dict_active.search(word, True)
+    print("dict_active.search: word, i:", str(word), str(i))
     if i >= 0:
         windex.see(i)
         show_translation(i)
@@ -218,9 +221,11 @@ bottom_frame.grid(row=2, column=0, columnspan=2, sticky='WE')
 if __name__ == '__main__':
 
     import stardict as sdict
+    import config as sconf
 
     print('dicts lookup')
-    ifos = sdict.look_for_dicts('./dic')
+#    ifos = sdict.look_for_dicts('./dic')
+    ifos = sdict.look_for_dicts(sconf.Config().get_dictdir())
 #    ifos = sdict.look_for_dicts('C:\\Users\\blang\\OneDrive\\PythonProjects\\WatchDicHistory\\pyStarDictViewer\\dic')
     dicts = []
     for ifo in ifos:

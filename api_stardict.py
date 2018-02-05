@@ -91,7 +91,8 @@ class StarDict:
             self.ifo[pair[0]] = pair[1][:-1]
 
         if (self.ifo['version'] not in ('2.4.2', '3.0.0') or
-            self.ifo['sametypesequence'] != 'g'):
+            #self.ifo['sametypesequence'] != 'g'):
+            (self.ifo['sametypesequence'] != 'g' and self.ifo['sametypesequence'] != 'x') ):
             raise ValueError('unsupported StarDict')
 
         if (not os.path.exists(name+'.idx')):
@@ -156,6 +157,7 @@ class StarDict:
         when prefix=True it searches for the lowest record
         with 'word' as its prefix
         '''
+        print("in search(), search word:",word)
         if word == '':
             return -1
         a, b = 0, len(self.idx)-1
@@ -223,8 +225,10 @@ if __name__ == '__main__':
     for d in dicts:
         print(d)
     dict = StarDict(dicts[0], False)
-    i = dict.search('a',True)
-    print("this is 'a' in dictionary:" +  str(i) )
+    dict.load()
+    i = dict.search('hello',True)
+    print("this is 'hello' in dictionary:" +  str(i) )
+    print(dict.dict_data(i))
     dz = DictZip(dicts[0][:-4]+'.dict.dz')
     dz.seek(dz.chlen-10)
     print(dz.read(20))

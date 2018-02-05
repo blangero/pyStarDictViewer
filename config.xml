@@ -1,0 +1,17 @@
+<dict>
+    <goldendict>
+        <history>
+            <path>%APPDATA%/GoldenDict/</path>
+            <filepattern>*history*</filepattern>
+        </history>
+    </goldendict>
+    <dictionary>
+        <file>
+            <dir>.\dic</dir>
+        </file>
+         <file>
+            <dir>C:\Users\I323320\Documents\Dictionary</dir>
+        </file>
+
+    </dictionary>
+</dict>
